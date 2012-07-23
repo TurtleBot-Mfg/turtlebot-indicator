@@ -1,0 +1,13 @@
+Source: turtlebot-indicator
+Maintainer: I Heart Engineering <code@iheartengineering.com>
+Section: x11
+Priority: optional
+Build-Depends: python (>= 2.6.6-3), debhelper (>= 7.4.3), libparse-debianchangelog-perl
+Standards-Version: 3.9.3
+
+Package: turtlebot-indicator
+Architecture: all
+Depends: python (>= 2.6.6-3), ${misc:Depends}, ${python:Depends}
+Provides: turtlebot-indicator
+Description: TurtleBot Status Indicator
+ This tool displays status information about the TurtleBot.

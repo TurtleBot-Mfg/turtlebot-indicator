@@ -1,0 +1,14 @@
+[Desktop Entry]
+Name=TurtleBot Indicator
+Comment=Indicates TurtleBot Status
+Icon=turtlebot-panel
+Exec=bash -i -c "source /opt/ros/\\`rosversion -d\\`/setup.bash && turtlebot-indicator"
+Terminal=false
+Type=Application
+NoDisplay=False
+NotShowIn=KDE;
+X-GNOME-Bugzilla-Bugzilla=GNOME
+X-GNOME-Bugzilla-Product=TurtleBotIndicator
+X-GNOME-Bugzilla-Component=general
+X-GNOME-Autostart-enabled=true
+X-Ubuntu-Gettext-Domain=turtlebot-indicator
