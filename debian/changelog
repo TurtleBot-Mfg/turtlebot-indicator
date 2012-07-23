@@ -1,5 +1,6 @@
-turtlebot-indicator (0.0.1) unstable; urgency=low
+turtlebot-indicator (0.0.1) precise; urgency=low
 
+  * Basic status working
   * source package automatically created by stdeb 0.6.0+git
 
  -- I Heart Engineering <code@iheartengineering.com>  Sun, 22 Jul 2012 22:11:07 -0400
