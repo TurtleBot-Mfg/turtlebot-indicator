@@ -37,6 +37,7 @@ import sys
 import gobject
 import gtk
 import appindicator
+import subprocess
 import rosgraph.masterapi
 
 class TurtleBotIndicator:
@@ -56,6 +57,14 @@ class TurtleBotIndicator:
         self._subs = {} # Subscribers keyed by topic
 
     def update(self):
+        p = subprocess.Popen(['turtlebot-network','interface'], stdout=subprocess.PIPE)
+        output = p.communicate()[0].strip()
+        p.wait()
+        if output != "lo":
+            self._network_online = True
+        else:
+            self._network_online = False
+
         if not self._master_online and self._master.is_online():
             self._master_update = True
             self._master_online = True
@@ -104,15 +113,30 @@ class TurtleBotIndicator:
                   self._turtlebot_online = True
             #self._nodes = list(set(self._pubs.values() + self._subs.values()))
 
+    def menuitem_shutdown (self,item):
+        os.system('gksudo "initctl stop turtlebot"')
+
+    def menuitem_startup (self,item):
+        os.system('gksudo "initctl start turtlebot"')
+
     def build_menu(self):
         self._menu = gtk.Menu()
 
-        if self._turtlebot_online:
-            self._ind.set_icon ("turtlebot-panel")
-            topic_item = gtk.MenuItem("Online")
-            topic_item.set_sensitive(False)
-            topic_item.show()
-            self._menu.append(topic_item)
+        if self._network_online:
+            if self._turtlebot_online:
+                self._ind.set_icon ("turtlebot-panel")
+                topic_item = gtk.MenuItem("Stop TurtleBot")
+                topic_item.set_sensitive(True)
+                topic_item.show()
+                topic_item.connect("activate",self.menuitem_shutdown)
+                self._menu.append(topic_item)
+            else:
+                self._ind.set_icon ("turtlebot-idle")
+                topic_item = gtk.MenuItem("Start TurtleBot")
+                topic_item.set_sensitive(True)
+                topic_item.show()
+                topic_item.connect("activate",self.menuitem_startup)
+                self._menu.append(topic_item)
         else:
             self._ind.set_icon ("turtlebot-idle")
             disconnect_item = gtk.MenuItem("disconnected")
@@ -124,7 +148,7 @@ class TurtleBotIndicator:
     def run(self):
         self.update()
         if not self._exit:
-            source_id = gobject.timeout_add(1000, self.run)
+            source_id = gobject.timeout_add(2000, self.run)
 
     def start(self):
         self.run()
