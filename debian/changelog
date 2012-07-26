@@ -1,9 +1,8 @@
 turtlebot-indicator (0.0.2) precise; urgency=low
 
-  * Start/Stop/Disconnect works
-  * State change requires gksudo
+  * Start/Stop/Disconnect works; State change requires gksudo
 
- -- I Heart Engineering <code@iheartengineering.com>  Thu, 26 Jul 2012 18:04:31 -0400
+ -- I Heart Engineering <code@iheartengineering.com>  Thu, 26 Jul 2012 18:06:48 -0400
 
 turtlebot-indicator (0.0.1) precise; urgency=low
 
