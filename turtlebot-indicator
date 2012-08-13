@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # Software License Agreement (BSD License)
 #
-# Copyright (c) 2008, I Heart Engineering
+# Copyright (c) 2012, I Heart Engineering
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@ import gtk
 import appindicator
 import subprocess
 import rosgraph.masterapi
+import time
 
 class TurtleBotIndicator:
     def __init__(self):
@@ -46,14 +47,15 @@ class TurtleBotIndicator:
         self._ind.set_status (appindicator.STATUS_ACTIVE)
         self._exit = False
         self._menu = gtk.Menu()
-        self._menu.set_double_buffered(True)
-        self._action = None
-        self._SHUTDOWN = 0
-        self._STARTUP = 1
+        self._menuitem = None
+        self._action = 0
+        self._SHUTDOWN = 1
+        self._STARTUP = 2
         self._master = rosgraph.masterapi.Master('/turtlebot-indicator')
-        self._master_update = False
+        self._master_update = True
         self._master_online = False
         self._turtlebot_online = False
+        self._network_online = False
         self._topics = [] # List of Topics
         self._nodes = [] # List of Topics
         self._pubs = {} # Publishers keyed by topic
@@ -64,14 +66,32 @@ class TurtleBotIndicator:
         output = p.communicate()[0].strip()
         p.wait()
         if output != "lo":
-            self._network_online = True
+            if not self._network_online:
+                self._network_online = True
+                self._master_update = True
+                self._action = self._STARTUP
         else:
-            self._network_online = False
+            if self._network_online:
+                self._network_online = False
+                self._master_update = True
+                self._action = self._SHUTDOWN
 
-        if not self._master_online and self._master.is_online():
+        if self._action == self._STARTUP and self._turtlebot_online:
+            self._action = 0
             self._master_update = True
             self._master_online = True
-            self._action = None
+        elif self._action == self._SHUTDOWN and not self._master.is_online():
+            self._action = 0
+            self._master_update = True
+            self._master_online = False
+            self._turtlebot_online = False
+            self._topics = []
+            self._nodes = []
+            self._pubs = {}
+            self._subs = {}
+        elif not self._master_online and self._master.is_online():
+            self._master_update = True
+            self._master_online = True
         elif self._master_online and not self._master.is_online():
             self._master_update = True
             self._master_online = False
@@ -80,12 +100,12 @@ class TurtleBotIndicator:
             self._nodes = []
             self._pubs = {}
             self._subs = {}
-            self._action = None
-        else:
+        elif self._action == 0:
             self._master_update = False
         self.update_topic_info()
         self.update_node_info()
-        self.build_menu()
+        if self._master_update:
+            self.build_menu()
 
     def update_topic_info(self):
         if self._master.is_online():
@@ -112,62 +132,73 @@ class TurtleBotIndicator:
             for nodes in self._subs.values():
                 self._nodes = self._nodes + nodes
             self._nodes = list(set(self._nodes))
-            self._turtlebot_online = False
+            if self._master_update:
+                self._turtlebot_online = False
             for node in self._nodes:
-              if node == "/turtlebot_node":
-                  self._turtlebot_online = True
+                if not self._turtlebot_online and node == "/turtlebot_node":
+                    self._turtlebot_online = True
+                    self._master_update = True
             #self._nodes = list(set(self._pubs.values() + self._subs.values()))
 
     def menuitem_shutdown (self,item):
         self._action = self._SHUTDOWN
-        os.system('gksudo "initctl stop turtlebot"')
+        self._master_update = True
+        #self.update()
+        p = subprocess.Popen(['gksudo', "initctl stop turtlebot" ], stdout=None)
 
     def menuitem_startup (self,item):
         self._action = self._STARTUP
-        os.system('gksudo "initctl start turtlebot"')
+        self._master_update = True
+        #self.build_menu()
+        p = subprocess.Popen(['gksudo', "initctl start turtlebot" ], stdout=None)
 
     def build_menu(self):
-        self._menu = gtk.Menu()
+        if self._ind.get_menu() == None:
+            self._menu = gtk.Menu()
+            self._menu.set_double_buffered(True)
+            if self._menuitem == None:
+                self._menuitem = gtk.MenuItem()
+            self._menu.append(self._menuitem)
+            self._ind.set_menu(self._menu)
+        else:
+            self._menu = self._ind.get_menu()
 
         if self._network_online:
             if self._action == self._STARTUP:
-                topic_item = gtk.MenuItem("Starting TurtleBot")
-                topic_item.set_sensitive(False)
-                topic_item.show()
-                self._menu.append(topic_item)
+                self._menuitem.set_label("Starting TurtleBot")
+                self._menuitem.set_sensitive(False)
+                self._menuitem.show()
             elif self._action == self._SHUTDOWN:
-                topic_item = gtk.MenuItem("Stopping TurtleBot")
-                topic_item.set_sensitive(False)
-                topic_item.show()
-                self._menu.append(topic_item)
+                self._menuitem.set_label("Stopping TurtleBot")
+                self._menuitem.set_sensitive(False)
+                self._menuitem.show()
             elif self._turtlebot_online:
                 self._ind.set_icon ("turtlebot-panel")
-                topic_item = gtk.MenuItem("Stop TurtleBot")
-                topic_item.set_sensitive(True)
-                topic_item.show()
-                topic_item.connect("activate",self.menuitem_shutdown)
-                self._menu.append(topic_item)
+                self._menuitem.set_label("Stop TurtleBot")
+                self._menuitem.set_sensitive(True)
+                self._menuitem.show()
+                self._menuitem.connect("activate",self.menuitem_shutdown)
             else:
                 self._ind.set_icon ("turtlebot-idle")
-                topic_item = gtk.MenuItem("Start TurtleBot")
-                topic_item.set_sensitive(True)
-                topic_item.show()
-                topic_item.connect("activate",self.menuitem_startup)
-                self._menu.append(topic_item)
+                self._menuitem.set_label("Start TurtleBot")
+                self._menuitem.set_sensitive(True)
+                self._menuitem.show()
+                self._menuitem.connect("activate",self.menuitem_startup)
         else:
             self._ind.set_icon ("turtlebot-idle")
-            disconnect_item = gtk.MenuItem("disconnected")
-            disconnect_item.set_sensitive(False)
-            disconnect_item.show()
-            self._menu.append(disconnect_item)
-        self._ind.set_menu(self._menu)
+            self._menuitem.set_label("disconnected")
+            self._menuitem.set_sensitive(False)
+            self._menuitem.show()
+        self._master_update = False
 
     def run(self):
         self.update()
         if not self._exit:
-            source_id = gobject.timeout_add(2000, self.run)
+            source_id = gobject.timeout_add(500, self.run)
 
     def start(self):
+        self.update()
+        self.build_menu()
         self.run()
         try:
             gtk.main()

@@ -1,3 +1,11 @@
+turtlebot-indicator (0.0.3~1.gbp3475a0) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @3475a0520add3e3d7689ba9edcdcd349eef357b2 **
+
+  * Added support for "Stopping" and "Starting" transitions
+
+ -- I Heart Engineering <code@iheartengineering.com>  Mon, 13 Aug 2012 06:16:28 -0400
+
 turtlebot-indicator (0.0.2) precise; urgency=low
 
   * Start/Stop/Disconnect works; State change requires gksudo
