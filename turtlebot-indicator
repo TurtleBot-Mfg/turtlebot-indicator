@@ -47,6 +47,9 @@ class TurtleBotIndicator:
         self._exit = False
         self._menu = gtk.Menu()
         self._menu.set_double_buffered(True)
+        self._action = None
+        self._SHUTDOWN = 0
+        self._STARTUP = 1
         self._master = rosgraph.masterapi.Master('/turtlebot-indicator')
         self._master_update = False
         self._master_online = False
@@ -68,6 +71,7 @@ class TurtleBotIndicator:
         if not self._master_online and self._master.is_online():
             self._master_update = True
             self._master_online = True
+            self._action = None
         elif self._master_online and not self._master.is_online():
             self._master_update = True
             self._master_online = False
@@ -76,6 +80,7 @@ class TurtleBotIndicator:
             self._nodes = []
             self._pubs = {}
             self._subs = {}
+            self._action = None
         else:
             self._master_update = False
         self.update_topic_info()
@@ -114,16 +119,28 @@ class TurtleBotIndicator:
             #self._nodes = list(set(self._pubs.values() + self._subs.values()))
 
     def menuitem_shutdown (self,item):
+        self._action = self._SHUTDOWN
         os.system('gksudo "initctl stop turtlebot"')
 
     def menuitem_startup (self,item):
+        self._action = self._STARTUP
         os.system('gksudo "initctl start turtlebot"')
 
     def build_menu(self):
         self._menu = gtk.Menu()
 
         if self._network_online:
-            if self._turtlebot_online:
+            if self._action == self._STARTUP:
+                topic_item = gtk.MenuItem("Starting TurtleBot")
+                topic_item.set_sensitive(False)
+                topic_item.show()
+                self._menu.append(topic_item)
+            elif self._action == self._SHUTDOWN:
+                topic_item = gtk.MenuItem("Stopping TurtleBot")
+                topic_item.set_sensitive(False)
+                topic_item.show()
+                self._menu.append(topic_item)
+            elif self._turtlebot_online:
                 self._ind.set_icon ("turtlebot-panel")
                 topic_item = gtk.MenuItem("Stop TurtleBot")
                 topic_item.set_sensitive(True)
