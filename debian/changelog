@@ -1,3 +1,11 @@
+turtlebot-indicator (0.0.3~1.gbpcf4205) UNRELEASED; urgency=low
+
+  ** SNAPSHOT build @cf4205be7e37cf86ef4ba8746a63c7d2077ed1a4 **
+
+  * Stop -> Stopping -> Start -> Starting   fixes #1
+
+ -- I Heart Engineering <code@iheartengineering.com>  Mon, 13 Aug 2012 10:20:03 -0400
+
 turtlebot-indicator (0.0.3~1.gbp3475a0) UNRELEASED; urgency=low
 
   ** SNAPSHOT build @3475a0520add3e3d7689ba9edcdcd349eef357b2 **
