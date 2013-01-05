@@ -1,3 +1,10 @@
+turtlebot-indicator (0.0.3) precise; urgency=low
+
+  * This fix should close #1
+  * debian/changelog
+
+ -- I Heart Engineering <code@iheartengineering.com>  Wed, 15 Aug 2012 08:49:05 -0400
+
 turtlebot-indicator (0.0.3~1.gbpcf4205) UNRELEASED; urgency=low
 
   ** SNAPSHOT build @cf4205be7e37cf86ef4ba8746a63c7d2077ed1a4 **
